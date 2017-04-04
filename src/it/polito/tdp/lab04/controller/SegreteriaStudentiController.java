@@ -1,12 +1,10 @@
 package it.polito.tdp.lab04.controller;
 
-import java.net.URL;
-import java.util.ResourceBundle;
 
-import javax.swing.DefaultComboBoxModel;
+import java.util.*;
 
 import it.polito.tdp.lab04.model.Model;
-import it.polito.tdp.lab04.model.Studente;
+import it.polito.tdp.lab04.model.Corso;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -17,12 +15,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 
 public class SegreteriaStudentiController {
-	Model model;
-    @FXML // ResourceBundle that was given to the FXMLLoader
-    private ResourceBundle resources;
-
-    @FXML // URL location of the FXML file that was given to the FXMLLoader
-    private URL location;
+	private Model model;
+   
 
     @FXML // fx:id="comboCorso"
     private ComboBox<String> comboCorso; // Value injected by FXMLLoader
@@ -56,30 +50,105 @@ public class SegreteriaStudentiController {
 
     @FXML
     void doCercaCorsi(ActionEvent event) {
-
+    	if(!txtMatricola.getText().matches("[0-9]*")){
+    		
+			txtResult.setText("Matricola non valida");
+			return;
+		}
+    	if (txtMatricola.getText().isEmpty()){
+			txtResult.setText("Inserisci una matricola");
+			return;
+		}
+    	int matricola = Integer.parseInt(txtMatricola.getText());
+    	if(model.cercaNomeStudente(matricola)==null){
+    		txtResult.appendText("Studente inesistente");
+    		return;
+    	}
+    	else{
+    		if(comboCorso.getValue().compareTo("Seleziona corso...")==0){
+    			String result = model.cercaCorsiStudente(matricola);
+    			if(result==null){
+    				txtResult.appendText("Studente non iscritto a corsi");
+    			}
+    			else{
+    				txtResult.appendText(result);
+    			}
+    	}
+    		else{
+    			boolean result = model.controllaCorsoStudente(comboCorso.getValue(), matricola);
+    			if(result)
+    				txtResult.appendText("\nStudente già iscritto al corso");
+    			else
+    				txtResult.appendText("\nStudente non ancora iscritto al corso");
+    		}
+    	}
     }
 
     @FXML
-    void doCercaIscrittiCorso(ActionEvent event) {
-
+    void doCercaIscrittiCorso(ActionEvent event) {    	
+    	String corso = null;
+    	corso=comboCorso.getValue();
+    	String risultato = model.studentiIscritti(corso);
+    	if(risultato==null){
+    		txtResult.appendText("Nessuno studente iscritto al corso "+ corso);
+    	}
+    	else{
+    		txtResult.appendText(risultato);
+    	}
     }
 
     @FXML
     void doCercaNome(MouseEvent event) {
-    	Studente temp = model.cercaStudente(Integer.parseInt(txtMatricola.getText()));
-    	txtNome.setText(temp.getNome());
-    	txtCognome.setText(temp.getCognome());
+    	
+    	
+    	if(!txtMatricola.getText().matches("[0-9]*")){
+    		
+			txtResult.setText("Matricola non valida");
+			return;
+		}
+    	if (txtMatricola.getText().isEmpty()){
+			txtResult.setText("Inserisci una matricola");
+			return;
+		}
+		int matricola = Integer.parseInt(txtMatricola.getText());
+		
+		if(model.cercaNomeStudente(matricola) == null){
+			txtResult.setText("Matricola non trovata!");
+			return;
+		}
+		txtNome.setText(model.cercaNomeStudente(matricola));
+		txtCognome.setText(model.cercaCognomeStudente(matricola));
+
     	
     }
 
     @FXML
     void doIscrivi(ActionEvent event) {
-
+    	if(!txtMatricola.getText().matches("[0-9]*")){
+    		
+			txtResult.setText("Matricola non valida");
+			return;
+		}
+    	if (txtMatricola.getText().isEmpty()){
+			txtResult.setText("Inserisci una matricola");
+			return;
+		}
+    	if(model.iscrivi(Integer.parseInt(txtMatricola.getText()),comboCorso.getValue())==0){
+    		txtResult.setText("Studente iscritto al corso");
+    	}
+    	else {
+    		txtResult.setText("Errore: non è possibile iscrivere lo studente");
+    	}
+    	
     }
 
     @FXML
     void doReset(ActionEvent event) {
-
+    	txtResult.clear();
+    	txtMatricola.clear();
+    	txtNome.clear();
+    	txtCognome.clear();
+    	comboCorso.setValue("Seleziona corso...");
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -102,6 +171,9 @@ public class SegreteriaStudentiController {
 		// TODO Auto-generated method stub
 		this.model=model;
 		comboCorso.getItems().addAll(model.getListaCorsi());
+		if (comboCorso.getItems().size()>0){
+			comboCorso.setValue("Seleziona corso...");
+		}
 	}
 }
 

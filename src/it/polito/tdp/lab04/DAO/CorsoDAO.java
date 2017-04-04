@@ -44,7 +44,7 @@ public class CorsoDAO {
 			throw new RuntimeException("Errore Db");
 		}
 	}
-	public List<Studente> getStudenti (){
+	/*public List<Studente> getStudenti (){
 		List<Studente> studenti= new ArrayList<Studente>();
 		final String sql = "SELECT * FROM studente";
 		try {
@@ -67,7 +67,7 @@ public class CorsoDAO {
 			// e.printStackTrace();
 			throw new RuntimeException("Errore Db");
 		}
-	}
+	}*/
 	/*
 	 * Dato un codice insegnamento, ottengo il corso
 	 */
@@ -78,16 +78,52 @@ public class CorsoDAO {
 	/*
 	 * Ottengo tutti gli studenti iscritti al Corso
 	 */
-	public void getStudentiIscrittiAlCorso(Corso corso) {
-		// TODO
+	public List<Studente> getStudentiIscrittiAlCorso(String corso) {
+		final String sql = "SELECT * "+
+							"FROM studente s "+
+							"WHERE s.matricola IN (SELECT DISTINCT matricola FROM iscrizione WHERE codins IN (SELECT DISTINCT codins FROM corso WHERE nome=?))";
+
+		List<Studente> studenti = new LinkedList<Studente>();
+
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setString(1, corso);
+			ResultSet rs = st.executeQuery();
+
+			while (rs.next()) {
+
+				// Crea un nuovo JAVA Bean Corso
+				Studente temp = new Studente(rs.getInt("matricola"),rs.getString("cognome"),rs.getString("nome"),rs.getString("cds"));
+				// Aggiungi il nuovo Corso alla lista
+				studenti.add(temp);
+			}
+
+			return studenti;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Errore Db");
+			}
 	}
 
 	/*
 	 * Data una matricola ed il codice insegnamento,
 	 * iscrivi lo studente al corso.
 	 */
-	public boolean inscriviStudenteACorso(Studente studente, Corso corso) {
-		// TODO
-		return false;
+	public boolean iscriviStudenteACorso(int  matricola, String corso) {
+	final String sql = "INSERT INTO `iscritticorsi`.`iscrizione` VALUES (?, (SELECT codins FROM corso WHERE nome= ?))";
+	try {
+		Connection conn = ConnectDB.getConnection();
+		PreparedStatement st = conn.prepareStatement(sql);
+		st.setInt(1, matricola);
+		st.setString(2, corso);
+		ResultSet rs = st.executeQuery();
+	}
+	catch(SQLException e) {
+		e.printStackTrace();
+		throw new RuntimeException("Errore Db");
+		}
+	return false;
 	}
 }
